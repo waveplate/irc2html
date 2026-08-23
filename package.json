@@ -1,0 +1,44 @@
+{
+  "name": "irc2html",
+  "version": "1.0.0",
+  "description": "Fast, native DOM and HTML renderer for IRC and ANSI terminal art",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./src/index.js"
+    },
+    "./css": "./src/styles.css",
+    "./palettes": "./src/palettes.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node tests/run-tests.js",
+    "build": "node scripts/build.js"
+  },
+  "keywords": [
+    "irc",
+    "mirc",
+    "ansi",
+    "ascii-art",
+    "irc-art",
+    "ansi-art",
+    "renderer",
+    "terminal",
+    "html",
+    "dom"
+  ],
+  "author": "",
+  "license": "MIT"
+}
