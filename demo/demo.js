@@ -1,4 +1,4 @@
-import { IrcViewer, toHtml, toHtmlDocument } from "../src/index.js";
+import { OutputPreview, render, toHtml, toHtmlDocument } from "../src/index.js";
 
 const sampleSelect = document.getElementById("sample-select");
 const formatSelect = document.getElementById("format-select");
@@ -28,7 +28,7 @@ const copyHtmlBtn = document.getElementById("copy-html-btn");
 const copyTextBtn = document.getElementById("copy-text-btn");
 const downloadHtmlBtn = document.getElementById("download-html-btn");
 
-let viewer = null;
+let preview = null;
 let currentArt = "";
 
 const SAMPLES = {
@@ -65,18 +65,14 @@ function renderArt(text) {
     format: formatSelect.value,
   };
 
-  if (!viewer) {
-    viewer = new IrcViewer(stageEl, options);
-  } else {
-    viewer.setOptions(options);
+  if (!preview) {
+    preview = new OutputPreview(stageEl, options);
   }
+  preview.setOutputFontSize(options.fontSize);
+  preview.setFontFamily(options.fontFamily);
+  preview.draw(text, options);
 
-  viewer.setArt(text, options);
   const elapsed = performance.now() - startTime;
-
-  const dims = viewer.getDimensions();
-  statusDim.textContent = `${dims.columns} × ${dims.rows}`;
-  statusCells.textContent = (dims.columns * dims.rows).toLocaleString();
   statusTime.textContent = `${elapsed.toFixed(1)} ms`;
 
   // Update HTML view if active
@@ -85,7 +81,6 @@ function renderArt(text) {
   }
 }
 
-// Event Listeners
 sampleSelect.addEventListener("change", () => {
   loadSample(sampleSelect.value);
 });
@@ -97,45 +92,31 @@ formatSelect.addEventListener("change", () => {
 fontSizeInput.addEventListener("input", () => {
   const size = fontSizeInput.value;
   fontSizeVal.textContent = `${size}px`;
-  if (viewer) {
-    viewer.setFontSize(parseFloat(size));
-    viewer.setOptions({
-      lineHeight: parseFloat(size) * parseFloat(lineHeightInput.value),
-      aspectRatio: parseFloat(aspectRatioInput.value),
-    });
+  if (preview) {
+    preview.setOutputFontSize(parseFloat(size));
   }
 });
 
 fontFamilySelect.addEventListener("change", () => {
-  if (viewer) {
-    viewer.setFontFamily(fontFamilySelect.value);
+  if (preview) {
+    preview.setFontFamily(fontFamilySelect.value);
   }
 });
 
 lineHeightInput.addEventListener("input", () => {
   lineHeightVal.textContent = `${lineHeightInput.value}x`;
-  if (viewer) {
-    const size = parseFloat(fontSizeInput.value);
-    viewer.setOptions({
-      lineHeight: size * parseFloat(lineHeightInput.value),
-    });
-  }
+  renderArt(rawTextInput.value);
 });
 
 aspectRatioInput.addEventListener("input", () => {
   aspectRatioVal.textContent = aspectRatioInput.value;
-  if (viewer) {
-    viewer.setOptions({
-      aspectRatio: parseFloat(aspectRatioInput.value),
-    });
-  }
+  renderArt(rawTextInput.value);
 });
 
 rawTextInput.addEventListener("input", () => {
   renderArt(rawTextInput.value);
 });
 
-// File Upload & Drag-and-drop
 fileInput.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (file) {
@@ -148,47 +129,17 @@ fileInput.addEventListener("change", (e) => {
   }
 });
 
-window.addEventListener("dragover", (e) => e.preventDefault());
-window.addEventListener("drop", (e) => {
-  e.preventDefault();
-  const file = e.dataTransfer.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      rawTextInput.value = evt.target.result;
-      renderArt(evt.target.result);
-    };
-    reader.readAsText(file);
-  }
-});
-
-// Theme switcher
-document.querySelectorAll(".theme-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".theme-btn").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    const theme = btn.dataset.theme;
-    if (viewer) {
-      viewer.setTheme(theme);
-    }
-  });
-});
-
 // Hover inspection
 stageEl.addEventListener("mousemove", (e) => {
-  if (!viewer) return;
-  const point = viewer.clientPointToCell(e.clientX, e.clientY);
+  if (!preview) return;
+  const point = preview.clientPointToCell(e.clientX, e.clientY);
   if (point) {
-    const char = point.cell?.character === " " ? "␣" : point.cell?.character;
-    const fg = point.cell?.foreground ? `rgb(${point.cell.foreground.join(",")})` : "default";
-    const bg = point.cell?.background ? `rgb(${point.cell.background.join(",")})` : "none";
-    statusHover.textContent = `Cell (${point.x}, ${point.y}) · Char: '${char}' · FG: ${fg} · BG: ${bg}`;
+    statusHover.textContent = `Cell (${point.x}, ${point.y})`;
   } else {
     statusHover.textContent = "-";
   }
 });
 
-// Tabs
 tabDomBtn.addEventListener("click", () => {
   tabDomBtn.classList.add("active");
   tabHtmlBtn.classList.remove("active");
@@ -210,7 +161,6 @@ tabHtmlBtn.addEventListener("click", () => {
   htmlCodeArea.value = toHtml(currentArt, options);
 });
 
-// Copy & Download
 copyHtmlBtn.addEventListener("click", async () => {
   const options = {
     fontSize: parseFloat(fontSizeInput.value),
@@ -220,14 +170,6 @@ copyHtmlBtn.addEventListener("click", async () => {
   await navigator.clipboard.writeText(html);
   copyHtmlBtn.textContent = "✓ Copied!";
   setTimeout(() => (copyHtmlBtn.textContent = "Copy HTML"), 2000);
-});
-
-copyTextBtn.addEventListener("click", async () => {
-  if (viewer) {
-    await viewer.copyText();
-    copyTextBtn.textContent = "✓ Copied!";
-    setTimeout(() => (copyTextBtn.textContent = "Copy Text"), 2000);
-  }
 });
 
 downloadHtmlBtn.addEventListener("click", () => {
@@ -246,5 +188,4 @@ downloadHtmlBtn.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
-// Initial Load
 loadSample("biglisa");

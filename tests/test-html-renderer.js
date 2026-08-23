@@ -6,9 +6,9 @@ export function testHtmlRenderer() {
 
   // 1. Basic HTML string output
   const html = toHtml("\x0304Red\x0303Green");
-  assert.ok(html.includes("class=\"irc2html-output\""), "Container should have output class");
-  assert.ok(html.includes("class=\"irc2html-row\""), "Should contain row element");
-  assert.ok(html.includes("class=\"irc2html-run\""), "Should contain run element");
+  assert.ok(html.includes("class=\"output-text\""), "Container should have output-text class");
+  assert.ok(html.includes("class=\"output-text-row\""), "Should contain output-text-row element");
+  assert.ok(html.includes("class=\"output-text-run\""), "Should contain output-text-run element");
   assert.ok(html.includes("color: rgb(255 0 0);"), "Should have red color style");
   assert.ok(html.includes("color: rgb(0 147 0);"), "Should have green color style");
 
@@ -29,7 +29,7 @@ export function testHtmlRenderer() {
   const doc = toHtmlDocument("\x0304TitleArt", { title: "Custom Title" });
   assert.ok(doc.startsWith("<!DOCTYPE html>"), "Should start with doctype");
   assert.ok(doc.includes("<title>Custom Title</title>"), "Should include title");
-  assert.ok(doc.includes(".irc2html-output"), "Should include embedded CSS");
+  assert.ok(doc.includes(".output-text"), "Should include embedded CSS");
 
   console.log("✓ HTML Renderer tests passed!");
 }

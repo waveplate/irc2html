@@ -1,34 +1,13 @@
 /**
- * irc2html - Fast, native DOM and HTML renderer for IRC and ANSI art
+ * irc2html - Native DOM and HTML renderer for IRC and ANSI art extracted from img2irc
  */
 
+export { OutputPreview, render, renderTo } from "./output-preview.js";
 export { parse } from "./parser.js";
 export { parseIrc } from "./parser-irc.js";
 export { parseAnsi } from "./parser-ansi.js";
-
-export {
-  toDOM,
-  renderTo,
-  renderTo as render,
-  calculateMetrics,
-  applyMetricsToElement,
-  buildDOMRows,
-} from "./dom-renderer.js";
-
-export {
-  toHtml,
-  toHtmlDocument,
-} from "./html-renderer.js";
-
-export {
-  IrcViewer,
-  IrcViewer as IrcArtViewer,
-} from "./viewer.js";
-
-export {
-  DEFAULT_CSS,
-  injectDefaultStyles,
-} from "./styles.js";
+export { toHtml, toHtmlDocument } from "./html-renderer.js";
+export { DEFAULT_CSS, injectDefaultStyles } from "./styles.js";
 
 export {
   IRC99_HEX,

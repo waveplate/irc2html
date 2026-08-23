@@ -19,95 +19,54 @@ export interface ParsedGrid {
   cells: Cell[][];
 }
 
-export type ArtFormat = "auto" | "irc" | "ansi" | "plain";
-export type ArtTheme = "dark" | "light" | "transparent";
+export interface RenderResult {
+  columns: number;
+  rows: number;
+  fontSize?: number;
+  cellAdvance?: number;
+  lineHeight?: number;
+  cells: Cell[][];
+}
 
-export interface ParserOptions {
-  format?: ArtFormat;
+export interface RenderOptions {
+  fontSize?: number;
+  fontFamily?: string;
+  cellAdvance?: number;
+  lineHeight?: number;
+  aspectRatio?: number;
+  format?: "auto" | "irc" | "ansi" | "plain";
   palette?: RgbColor[];
   defaultForeground?: RgbColor;
   defaultBackground?: RgbColor;
   tabWidth?: number;
   trimTrailingSpaces?: boolean;
   trimTrailingEmptyRows?: boolean;
-}
-
-export interface RenderMetrics {
-  fontSize: number;
-  fontFamily: string;
-  cellAdvance: number;
-  lineHeight: number;
-  letterSpacing: string;
-  width?: number;
-  height?: number;
-}
-
-export interface RenderOptions extends ParserOptions {
-  fontSize?: number | string;
-  fontFamily?: string;
-  cellAdvance?: number;
-  lineHeight?: number;
-  letterSpacing?: number | string;
-  aspectRatio?: number;
-  autoMeasure?: boolean;
-  theme?: ArtTheme;
-  className?: string;
-  rowClassName?: string;
-  runClassName?: string;
-  ariaLabel?: string;
-  injectStyles?: boolean;
   inlineStyles?: boolean;
   includeCss?: boolean;
   title?: string;
-  art?: string | Cell[][] | { cells?: Cell[][]; grid?: Cell[][] };
 }
 
-export interface RenderResult {
-  columns: number;
-  rows: number;
-  cells: Cell[][];
-  container: HTMLDivElement;
-}
-
-export interface CellCoordinate {
-  x: number;
-  y: number;
-  cell?: Cell;
-}
-
-export function parseIrc(text: string, options?: ParserOptions): ParsedGrid;
-export function parseAnsi(text: string, options?: ParserOptions): ParsedGrid;
-export function parse(input: string | Cell[][] | { cells?: Cell[][]; grid?: Cell[][] }, options?: ParserOptions): ParsedGrid;
-
-export function toDOM(input: string | Cell[][] | { cells?: Cell[][]; grid?: Cell[][] }, options?: RenderOptions): HTMLDivElement;
-export function renderTo(input: string | Cell[][] | { cells?: Cell[][]; grid?: Cell[][] }, targetElement: HTMLElement, options?: RenderOptions): RenderResult;
-export function render(input: string | Cell[][] | { cells?: Cell[][]; grid?: Cell[][] }, targetElement: HTMLElement, options?: RenderOptions): RenderResult;
-
-export function toHtml(input: string | Cell[][] | { cells?: Cell[][]; grid?: Cell[][] }, options?: RenderOptions): string;
-export function toHtmlDocument(input: string | Cell[][] | { cells?: Cell[][] }, options?: RenderOptions): string;
-
-export function calculateMetrics(options?: RenderOptions, columns?: number, rows?: number): RenderMetrics;
-export function applyMetricsToElement(element: HTMLElement, metrics: RenderMetrics, columns?: number, rows?: number): void;
-export function buildDOMRows(cellRows: Cell[][], options?: RenderOptions): DocumentFragment;
-
-export class IrcViewer {
+export class OutputPreview {
   constructor(targetElement: HTMLElement, options?: RenderOptions);
-  setArt(input: string | Cell[][] | { cells?: Cell[][]; grid?: Cell[][] }, options?: RenderOptions): void;
-  setFontSize(size: number | string): void;
+  constructor(stageElement: HTMLElement, textElement: HTMLElement, placeholderElement?: HTMLElement);
   setFontFamily(family: string): void;
-  setTheme(theme: ArtTheme): void;
-  setOptions(options: RenderOptions): void;
-  clientPointToCell(clientX: number, clientY: number): CellCoordinate | undefined;
-  getCell(x: number, y: number): Cell | undefined;
-  getDimensions(): { columns: number; rows: number; width?: number; height?: number };
-  getCells(): Cell[][];
-  copyHtml(): Promise<boolean>;
-  copyText(): Promise<string>;
-  clear(placeholderMessage?: string): void;
-  destroy(): void;
+  setOutputFontSize(size: number | string): void;
+  draw(resultOrArt: string | RenderResult, options?: RenderOptions): void;
+  render(resultOrArt: string | RenderResult, options?: RenderOptions): void;
+  hasText(): boolean;
+  clear(message?: string): void;
+  clientPointToCell(clientX: number, clientY: number, columns?: number, rows?: number): { x: number; y: number } | undefined;
 }
 
-export { IrcViewer as IrcArtViewer };
+export function render(rawArtOrResult: string | RenderResult, targetElement: HTMLElement, options?: RenderOptions): OutputPreview;
+export function renderTo(rawArtOrResult: string | RenderResult, targetElement: HTMLElement, options?: RenderOptions): OutputPreview;
+
+export function parse(input: string | Cell[][] | { cells?: Cell[][] }, options?: RenderOptions): ParsedGrid;
+export function parseIrc(text: string, options?: RenderOptions): ParsedGrid;
+export function parseAnsi(text: string, options?: RenderOptions): ParsedGrid;
+
+export function toHtml(input: string | Cell[][] | RenderResult, options?: RenderOptions): string;
+export function toHtmlDocument(input: string | Cell[][] | RenderResult, options?: RenderOptions): string;
 
 export const DEFAULT_CSS: string;
 export function injectDefaultStyles(doc?: Document): HTMLStyleElement | undefined;
@@ -127,6 +86,6 @@ export function getIrcColor(index: number, palette?: RgbColor[]): RgbColor | und
 export function getAnsiColor(index: number, palette?: RgbColor[]): RgbColor | undefined;
 
 export function escapeHtml(str: string): string;
-export function displayStyle(cell: Cell, defaultFg?: RgbColor, defaultBg?: RgbColor): object;
+export function displayStyle(cell: Cell): { foreground: RgbColor; background: RgbColor; bold?: boolean; italic?: boolean; underline?: boolean };
 export function sameStyle(left: object, right: object): boolean;
-export function detectFormat(text: string): ArtFormat;
+export function detectFormat(text: string): "ansi" | "irc" | "plain";

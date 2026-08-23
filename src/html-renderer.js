@@ -1,7 +1,6 @@
 import { parse } from "./parser.js";
 import { rgbToString } from "./palettes.js";
 import { displayStyle, sameStyle, escapeHtml } from "./utils.js";
-import { calculateMetrics } from "./dom-renderer.js";
 import { DEFAULT_CSS } from "./styles.js";
 
 /**
@@ -11,9 +10,9 @@ import { DEFAULT_CSS } from "./styles.js";
  * @param {object} [options={}] - Render options.
  * @param {boolean} [options.inlineStyles=true] - Whether to include inline CSS styles on spans.
  * @param {boolean} [options.includeCss=false] - Whether to prepend a <style> block.
- * @param {string} [options.className='irc2html-output'] - Class name for outer container.
- * @param {string} [options.rowClassName='irc2html-row'] - Class name for row containers.
- * @param {string} [options.runClassName='irc2html-run'] - Class name for character runs.
+ * @param {string} [options.className='output-text'] - Class name for outer container.
+ * @param {string} [options.rowClassName='output-text-row'] - Class name for row containers.
+ * @param {string} [options.runClassName='output-text-run'] - Class name for character runs.
  * @returns {string}
  */
 export function toHtml(input, options = {}) {
@@ -21,34 +20,23 @@ export function toHtml(input, options = {}) {
   const defaultForeground = options.defaultForeground ?? [255, 255, 255];
   const defaultBackground = options.defaultBackground ?? [0, 0, 0];
 
-  const className = options.className ?? "irc2html-output";
-  const rowClassName = options.rowClassName ?? "irc2html-row";
-  const runClassName = options.runClassName ?? "irc2html-run";
+  const className = options.className ?? "output-text";
+  const rowClassName = options.rowClassName ?? "output-text-row";
+  const runClassName = options.runClassName ?? "output-text-run";
 
-  const metrics = calculateMetrics(options, parsed.columns, parsed.rows);
+  const fontSize = typeof options.fontSize === "number" ? options.fontSize : 16;
+  const fontFamily = options.fontFamily || "monospace";
+  const cellAdvance = options.cellAdvance ?? (fontSize * (options.aspectRatio ?? 0.55));
+  const lineHeight = options.lineHeight ?? fontSize;
 
   const containerStyles = [
-    `--irc2html-font-size: ${metrics.fontSize}px;`,
-    `--irc2html-font-family: "${metrics.fontFamily.replaceAll('"', '\\"')}", monospace;`,
-    `--irc2html-line-height: ${metrics.lineHeight}px;`,
-    `--irc2html-letter-spacing: ${metrics.letterSpacing};`,
-    `font-size: ${metrics.fontSize}px;`,
-    `font-family: "${metrics.fontFamily.replaceAll('"', '\\"')}", monospace;`,
-    `line-height: ${metrics.lineHeight}px;`,
-    `letter-spacing: ${metrics.letterSpacing};`,
+    `font-size: ${fontSize}px;`,
+    `font-family: "${fontFamily.replaceAll('"', '\\"')}", monospace;`,
+    `line-height: ${lineHeight}px;`,
+    `--output-line-height: ${lineHeight}px;`,
+    `width: ${parsed.columns * cellAdvance}px;`,
+    `height: ${parsed.rows * lineHeight}px;`,
   ];
-
-  if (metrics.width) {
-    containerStyles.push(`width: ${metrics.width}px;`);
-  }
-  if (metrics.height) {
-    containerStyles.push(`height: ${metrics.height}px;`);
-  }
-  if (options.theme === "light") {
-    containerStyles.push("--irc2html-bg: #ffffff; --irc2html-fg: #000000;");
-  } else if (options.theme === "transparent") {
-    containerStyles.push("--irc2html-bg: transparent;");
-  }
 
   const rowsHtml = [];
 
@@ -67,8 +55,6 @@ export function toHtml(input, options = {}) {
         if (currentStyle.bold) styleDeclarations.push("font-weight: 700;");
         if (currentStyle.italic) styleDeclarations.push("font-style: italic;");
         if (currentStyle.underline) styleDeclarations.push("text-decoration: underline;");
-        if (currentStyle.strikethrough) styleDeclarations.push("text-decoration: line-through;");
-        if (currentStyle.hidden) styleDeclarations.push("visibility: hidden;");
 
         const styleAttr = options.inlineStyles !== false
           ? ` style="${styleDeclarations.join(" ")}"`
@@ -103,7 +89,7 @@ export function toHtml(input, options = {}) {
     ? ` style="${containerStyles.join(" ")}"`
     : "";
 
-  let output = `<div class="${escapeHtml(className)}"${containerStyleAttr} role="img" aria-label="${escapeHtml(options.ariaLabel ?? "Rendered terminal art")}">\n${rowsHtml.join("\n")}\n</div>`;
+  let output = `<div class="${escapeHtml(className)}"${containerStyleAttr} role="img" aria-label="${escapeHtml(options.ariaLabel ?? "Rendered terminal art as native browser text")}">\n${rowsHtml.join("\n")}\n</div>`;
 
   if (options.includeCss) {
     output = `<style>\n${DEFAULT_CSS}\n</style>\n` + output;
@@ -117,7 +103,7 @@ export function toHtml(input, options = {}) {
  *
  * @param {string | Array<Array<object>> | object} input
  * @param {object} [options={}]
- * @param {string} [options.title='IRC Art']
+ * @param {string} [options.title='Terminal Art']
  * @returns {string}
  */
 export function toHtmlDocument(input, options = {}) {
@@ -134,8 +120,8 @@ export function toHtmlDocument(input, options = {}) {
     body {
       margin: 0;
       padding: 24px;
-      background: #111;
-      color: #eee;
+      background: #000;
+      color: #fff;
       display: flex;
       justify-content: center;
       align-items: center;

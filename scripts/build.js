@@ -26,7 +26,6 @@ fs.copyFileSync(
   path.join(distDir, "index.d.ts")
 );
 
-// Helper to concatenate modules for CJS and IIFE
 const files = [
   "palettes.js",
   "utils.js",
@@ -34,16 +33,13 @@ const files = [
   "parser-irc.js",
   "parser-ansi.js",
   "parser.js",
-  "dom-renderer.js",
+  "output-preview.js",
   "html-renderer.js",
-  "viewer.js",
 ];
 
-// Clean ESM source code into a bundled single file
 let bundledSource = "";
 for (const file of files) {
   let content = fs.readFileSync(path.join(srcDir, file), "utf8");
-  // Remove import statements from relative files
   content = content.replace(/^import\s+.*?from\s+["'].\/.*?["'];?\s*$/gm, "");
   bundledSource += `\n// --- ${file} ---\n` + content;
 }
@@ -51,19 +47,14 @@ for (const file of files) {
 // 3. Generate ESM single bundle (dist/index.js)
 const esmBundle = bundledSource + `
 export {
+  OutputPreview,
+  render,
+  renderTo,
   parse,
   parseIrc,
   parseAnsi,
-  toDOM,
-  renderTo,
-  renderTo as render,
-  calculateMetrics,
-  applyMetricsToElement,
-  buildDOMRows,
   toHtml,
   toHtmlDocument,
-  IrcViewer,
-  IrcViewer as IrcArtViewer,
   DEFAULT_CSS,
   injectDefaultStyles,
   IRC99_HEX,
@@ -94,19 +85,14 @@ cjsSource = cjsSource.replace(/^export\s+let\s+([a-zA-Z0-9_$]+)/gm, "let $1");
 
 const cjsBundle = `"use strict";\n` + cjsSource + `
 module.exports = {
+  OutputPreview,
+  render,
+  renderTo,
   parse,
   parseIrc,
   parseAnsi,
-  toDOM,
-  renderTo,
-  render: renderTo,
-  calculateMetrics,
-  applyMetricsToElement,
-  buildDOMRows,
   toHtml,
   toHtmlDocument,
-  IrcViewer,
-  IrcArtViewer: IrcViewer,
   DEFAULT_CSS,
   injectDefaultStyles,
   IRC99_HEX,
@@ -136,19 +122,14 @@ const iifeBundle = `(function (global) {
 ${cjsSource}
 
   var Irc2Html = {
+    OutputPreview: OutputPreview,
+    render: render,
+    renderTo: renderTo,
     parse: parse,
     parseIrc: parseIrc,
     parseAnsi: parseAnsi,
-    toDOM: toDOM,
-    renderTo: renderTo,
-    render: renderTo,
-    calculateMetrics: calculateMetrics,
-    applyMetricsToElement: applyMetricsToElement,
-    buildDOMRows: buildDOMRows,
     toHtml: toHtml,
     toHtmlDocument: toHtmlDocument,
-    IrcViewer: IrcViewer,
-    IrcArtViewer: IrcViewer,
     DEFAULT_CSS: DEFAULT_CSS,
     injectDefaultStyles: injectDefaultStyles,
     IRC99_HEX: IRC99_HEX,
