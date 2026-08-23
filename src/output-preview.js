@@ -1,34 +1,11 @@
 import { parse } from "./parser.js";
 import { injectDefaultStyles } from "./styles.js";
+import { displayStyle, sameStyle } from "./utils.js";
+import { rgbToString } from "./palettes.js";
 
 // Terminal glyph size is a display property, independent of the raster size
 // used while matching glyphs in WASM.
 const DEFAULT_DISPLAY_FONT_SIZE = 16;
-
-function rgb(color, fallback = [0, 0, 0]) {
-  const [red, green, blue] = color ?? fallback;
-  return `rgb(${red} ${green} ${blue})`;
-}
-
-function displayStyle(cell) {
-  const foreground = cell.inverted ? (cell.background ?? [0, 0, 0]) : cell.foreground;
-  const background = cell.inverted ? cell.foreground : (cell.background ?? [0, 0, 0]);
-  return {
-    foreground,
-    background,
-    bold: cell.bold,
-    italic: cell.italic,
-    underline: cell.underline,
-  };
-}
-
-function sameStyle(left, right) {
-  return left.bold === right.bold
-    && left.italic === right.italic
-    && left.underline === right.underline
-    && left.foreground.every((value, index) => value === right.foreground[index])
-    && left.background.every((value, index) => value === right.background[index]);
-}
 
 export class OutputPreview {
   #stage;
@@ -165,8 +142,8 @@ export class OutputPreview {
         if (!run || !sameStyle(style, runStyle)) {
           run = document.createElement("span");
           run.className = "output-text-run";
-          run.style.color = rgb(style.foreground, [255, 255, 255]);
-          run.style.backgroundColor = rgb(style.background);
+          run.style.color = rgbToString(style.foreground, [255, 255, 255]);
+          run.style.backgroundColor = rgbToString(style.background, [0, 0, 0]);
           run.style.fontWeight = style.bold ? "700" : "400";
           run.style.fontStyle = style.italic ? "italic" : "normal";
           run.style.textDecoration = style.underline ? "underline" : "none";
