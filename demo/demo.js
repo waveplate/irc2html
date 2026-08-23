@@ -1,4 +1,5 @@
-import { OutputPreview, render, toHtml, toHtmlDocument } from "../src/index.js";
+import { OutputPreview, render, toHtml, toHtmlDocument } from "./irc2html.js";
+import { SAMPLES } from "./samples.js";
 
 const sampleSelect = document.getElementById("sample-select");
 const formatSelect = document.getElementById("format-select");
@@ -31,26 +32,11 @@ const downloadHtmlBtn = document.getElementById("download-html-btn");
 let preview = null;
 let currentArt = "";
 
-const SAMPLES = {
-  "biglisa": "./samples/biglisa.ansi",
-  "2cool4skin": "./samples/2cool4skin.irc",
-  "badge": "./samples/badge.irc",
-  "ansitest": "./samples/ansitest.ansi",
-  "palette-test": "./samples/palette-test.irc",
-  "truecolor-rainbow": "./samples/truecolor-rainbow.ansi",
-};
-
-async function loadSample(name) {
-  const url = SAMPLES[name];
-  if (!url) return;
-  try {
-    const res = await fetch(url);
-    const text = await res.text();
-    rawTextInput.value = text;
-    renderArt(text);
-  } catch (err) {
-    console.error("Failed to load sample:", err);
-  }
+function loadSample(name) {
+  const text = SAMPLES[name];
+  if (!text) return;
+  rawTextInput.value = text;
+  renderArt(text);
 }
 
 function renderArt(text) {
@@ -188,4 +174,5 @@ downloadHtmlBtn.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
+// Initial sample load (purely in-memory, no path-dependent fetch)
 loadSample("biglisa");

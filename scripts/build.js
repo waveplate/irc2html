@@ -7,6 +7,7 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const srcDir = path.resolve(rootDir, "src");
 const distDir = path.resolve(rootDir, "dist");
+const demoDir = path.resolve(rootDir, "demo");
 
 if (!fs.existsSync(distDir)) {
   fs.mkdirSync(distDir, { recursive: true });
@@ -76,6 +77,7 @@ export {
 };
 `;
 fs.writeFileSync(path.join(distDir, "index.js"), esmBundle);
+fs.writeFileSync(path.join(demoDir, "irc2html.js"), esmBundle);
 
 // 4. Generate CJS single bundle (dist/index.cjs)
 let cjsSource = bundledSource.replace(/^export\s+(?:async\s+)?function\s+([a-zA-Z0-9_$]+)/gm, "function $1");
