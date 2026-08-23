@@ -12,7 +12,7 @@ export class OutputPreview {
   #text;
   #placeholder;
   #displayFontSize = DEFAULT_DISPLAY_FONT_SIZE;
-  #fontFamily = "monospace";
+  #fontFamily = "Cascadia Code, monospace";
   #textMetrics;
   #hasText = false;
   #measurementContext = null;
@@ -53,17 +53,19 @@ export class OutputPreview {
       
       this.#stage.replaceChildren(this.#text);
       
-      if (options.fontSize) {
-        this.setOutputFontSize(options.fontSize);
-      }
       if (options.fontFamily) {
         this.setFontFamily(options.fontFamily);
+      } else {
+        this.#text.style.fontFamily = `"${this.#fontFamily.replaceAll('"', '\\"')}", monospace`;
+      }
+      if (options.fontSize) {
+        this.setOutputFontSize(options.fontSize);
       }
     }
   }
 
   setFontFamily(family) {
-    this.#fontFamily = family || "monospace";
+    this.#fontFamily = family || "Cascadia Code, monospace";
     this.#text.style.fontFamily = `"${this.#fontFamily.replaceAll('"', '\\"')}", monospace`;
     if (this.#textMetrics) this.#applyTextDisplayMetrics(this.#textMetrics);
   }
@@ -86,12 +88,21 @@ export class OutputPreview {
     if (typeof resultOrArt === "string") {
       const parsed = parse(resultOrArt, options);
       const fontSize = options.fontSize ?? this.#displayFontSize;
-      const cellAdvance = options.cellAdvance ?? (fontSize * (options.aspectRatio ?? 0.55));
+      
+      let naturalAdvance = fontSize * 0.6;
+      if (this.#measurementContext) {
+        this.#measurementContext.font = `400 ${this.#displayFontSize}px "${this.#fontFamily.replaceAll('"', '\\"')}", monospace`;
+        const measured = this.#measurementContext.measureText("M").width;
+        if (measured > 0) naturalAdvance = measured;
+      }
+
+      const cellAdvance = options.cellAdvance ?? naturalAdvance;
       const lineHeight = options.lineHeight ?? fontSize;
 
       result = {
         columns: parsed.columns,
         rows: parsed.rows,
+        renderFontSize: fontSize,
         fontSize,
         cellAdvance,
         lineHeight,
@@ -102,11 +113,18 @@ export class OutputPreview {
     }
 
     if (result && result.cells) {
+      let naturalAdvance = this.#displayFontSize * 0.6;
+      if (this.#measurementContext) {
+        this.#measurementContext.font = `400 ${this.#displayFontSize}px "${this.#fontFamily.replaceAll('"', '\\"')}", monospace`;
+        const measured = this.#measurementContext.measureText("M").width;
+        if (measured > 0) naturalAdvance = measured;
+      }
+
       this.#textMetrics = {
         columns: result.columns,
         rows: result.rows,
-        renderFontSize: result.fontSize ?? this.#displayFontSize,
-        cellAdvance: result.cellAdvance ?? (this.#displayFontSize * 0.55),
+        renderFontSize: result.renderFontSize ?? result.fontSize ?? this.#displayFontSize,
+        cellAdvance: result.cellAdvance ?? naturalAdvance,
         lineHeight: result.lineHeight ?? this.#displayFontSize,
       };
       this.#applyTextDisplayMetrics(this.#textMetrics);
@@ -164,7 +182,7 @@ export class OutputPreview {
     const lineHeight = result.lineHeight * scale;
     let naturalAdvance = cellAdvance;
     if (this.#measurementContext) {
-      this.#measurementContext.font = `400 ${this.#displayFontSize}px "${this.#fontFamily.replaceAll('"', '\\"')}"`;
+      this.#measurementContext.font = `400 ${this.#displayFontSize}px "${this.#fontFamily.replaceAll('"', '\\"')}", monospace`;
       naturalAdvance = this.#measurementContext.measureText("M").width;
     }
     this.#text.style.fontSize = `${this.#displayFontSize}px`;

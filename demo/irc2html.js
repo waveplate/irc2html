@@ -982,7 +982,7 @@ var OutputPreview = class {
     __privateAdd(this, _text);
     __privateAdd(this, _placeholder);
     __privateAdd(this, _displayFontSize, DEFAULT_DISPLAY_FONT_SIZE);
-    __privateAdd(this, _fontFamily, "monospace");
+    __privateAdd(this, _fontFamily, "Cascadia Code, monospace");
     __privateAdd(this, _textMetrics);
     __privateAdd(this, _hasText, false);
     __privateAdd(this, _measurementContext, null);
@@ -1009,16 +1009,18 @@ var OutputPreview = class {
       __privateGet(this, _text).setAttribute("role", "img");
       __privateGet(this, _text).setAttribute("aria-label", "Rendered terminal art as native browser text");
       __privateGet(this, _stage).replaceChildren(__privateGet(this, _text));
-      if (options.fontSize) {
-        this.setOutputFontSize(options.fontSize);
-      }
       if (options.fontFamily) {
         this.setFontFamily(options.fontFamily);
+      } else {
+        __privateGet(this, _text).style.fontFamily = `"${__privateGet(this, _fontFamily).replaceAll('"', '\\"')}", monospace`;
+      }
+      if (options.fontSize) {
+        this.setOutputFontSize(options.fontSize);
       }
     }
   }
   setFontFamily(family) {
-    __privateSet(this, _fontFamily, family || "monospace");
+    __privateSet(this, _fontFamily, family || "Cascadia Code, monospace");
     __privateGet(this, _text).style.fontFamily = `"${__privateGet(this, _fontFamily).replaceAll('"', '\\"')}", monospace`;
     if (__privateGet(this, _textMetrics)) __privateMethod(this, _OutputPreview_instances, applyTextDisplayMetrics_fn).call(this, __privateGet(this, _textMetrics));
   }
@@ -1038,11 +1040,18 @@ var OutputPreview = class {
     if (typeof resultOrArt === "string") {
       const parsed = parse(resultOrArt, options);
       const fontSize = options.fontSize ?? __privateGet(this, _displayFontSize);
-      const cellAdvance = options.cellAdvance ?? fontSize * (options.aspectRatio ?? 0.55);
+      let naturalAdvance = fontSize * 0.6;
+      if (__privateGet(this, _measurementContext)) {
+        __privateGet(this, _measurementContext).font = `400 ${__privateGet(this, _displayFontSize)}px "${__privateGet(this, _fontFamily).replaceAll('"', '\\"')}", monospace`;
+        const measured = __privateGet(this, _measurementContext).measureText("M").width;
+        if (measured > 0) naturalAdvance = measured;
+      }
+      const cellAdvance = options.cellAdvance ?? naturalAdvance;
       const lineHeight = options.lineHeight ?? fontSize;
       result = {
         columns: parsed.columns,
         rows: parsed.rows,
+        renderFontSize: fontSize,
         fontSize,
         cellAdvance,
         lineHeight,
@@ -1052,11 +1061,17 @@ var OutputPreview = class {
       result = resultOrArt;
     }
     if (result && result.cells) {
+      let naturalAdvance = __privateGet(this, _displayFontSize) * 0.6;
+      if (__privateGet(this, _measurementContext)) {
+        __privateGet(this, _measurementContext).font = `400 ${__privateGet(this, _displayFontSize)}px "${__privateGet(this, _fontFamily).replaceAll('"', '\\"')}", monospace`;
+        const measured = __privateGet(this, _measurementContext).measureText("M").width;
+        if (measured > 0) naturalAdvance = measured;
+      }
       __privateSet(this, _textMetrics, {
         columns: result.columns,
         rows: result.rows,
-        renderFontSize: result.fontSize ?? __privateGet(this, _displayFontSize),
-        cellAdvance: result.cellAdvance ?? __privateGet(this, _displayFontSize) * 0.55,
+        renderFontSize: result.renderFontSize ?? result.fontSize ?? __privateGet(this, _displayFontSize),
+        cellAdvance: result.cellAdvance ?? naturalAdvance,
         lineHeight: result.lineHeight ?? __privateGet(this, _displayFontSize)
       });
       __privateMethod(this, _OutputPreview_instances, applyTextDisplayMetrics_fn).call(this, __privateGet(this, _textMetrics));
@@ -1141,7 +1156,7 @@ applyTextDisplayMetrics_fn = function(result) {
   const lineHeight = result.lineHeight * scale;
   let naturalAdvance = cellAdvance;
   if (__privateGet(this, _measurementContext)) {
-    __privateGet(this, _measurementContext).font = `400 ${__privateGet(this, _displayFontSize)}px "${__privateGet(this, _fontFamily).replaceAll('"', '\\"')}"`;
+    __privateGet(this, _measurementContext).font = `400 ${__privateGet(this, _displayFontSize)}px "${__privateGet(this, _fontFamily).replaceAll('"', '\\"')}", monospace`;
     naturalAdvance = __privateGet(this, _measurementContext).measureText("M").width;
   }
   __privateGet(this, _text).style.fontSize = `${__privateGet(this, _displayFontSize)}px`;

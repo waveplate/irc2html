@@ -1,11 +1,27 @@
-/* irc2html native text styles */
+@font-face {
+  font-family: "Cascadia Code";
+  src: url("./fonts/CascadiaCode-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Iosevka Fixed";
+  src: url("./fonts/IosevkaFixed-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* irc2html native text styles directly from img2irc */
 .output-text {
   background: #000;
   color: #fff;
   contain: layout paint style;
   display: inline-block;
   flex: none;
-  font-family: monospace;
+  font-family: "Cascadia Code", "Iosevka Fixed", monospace;
   font-kerning: none;
   font-size: 16px;
   font-synthesis: style weight;
