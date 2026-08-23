@@ -1,0 +1,333 @@
+@font-face {
+  font-family: "Cascadia Code";
+  src: url("./fonts/CascadiaCode-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Iosevka Fixed";
+  src: url("./fonts/IosevkaFixed-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* irc2html native text & canvas styles directly from img2irc */
+.output-canvas {
+  background: #000;
+  display: block;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.output-canvas[hidden],
+.output-text[hidden] {
+  display: none !important;
+}
+
+.output-text {
+  background: #000;
+  color: #fff;
+  contain: layout paint style;
+  display: inline-block;
+  flex: none;
+  font-family: "Iosevka Fixed", monospace;
+  font-kerning: none;
+  font-size: 16px;
+  font-synthesis: style weight;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+  text-rendering: optimizeSpeed;
+  user-select: text;
+  box-sizing: border-box;
+}
+
+.output-text-row {
+  display: flex;
+  height: var(--output-line-height);
+  line-height: var(--output-line-height);
+  overflow: hidden;
+  white-space: pre;
+}
+
+.output-text-run {
+  display: block;
+  flex: none;
+  height: var(--output-line-height);
+  line-height: var(--output-line-height);
+  /* Close subpixel seams inside adjoining block-element glyphs. */
+  text-shadow:
+    -.1px 0 currentColor,
+    .1px 0 currentColor,
+    0 -.1px currentColor,
+    0 .1px currentColor;
+  white-space: pre;
+}
+
+/* Demo UI styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-primary: #121418;
+  --bg-secondary: #1a1d24;
+  --bg-tertiary: #232731;
+  --border-color: #333846;
+  --text-primary: #f0f2f5;
+  --text-secondary: #9ba3b4;
+  --accent: #4f8cff;
+  --accent-hover: #6ea0ff;
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: none;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.badge {
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.header-links {
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.app-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 340px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex: none;
+}
+
+.sidebar-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.sidebar-section h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.control-group {
+  margin-bottom: 12px;
+}
+
+.control-group:last-child {
+  margin-bottom: 0;
+}
+
+label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.val-indicator {
+  color: var(--accent);
+  font-family: monospace;
+}
+
+select, input[type="text"], input[type="number"], textarea {
+  width: 100%;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+}
+
+select:focus, input:focus, textarea:focus {
+  border-color: var(--accent);
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+textarea {
+  height: 140px;
+  font-family: monospace;
+  font-size: 12px;
+  resize: vertical;
+  white-space: pre;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #08090b;
+}
+
+.tab-bar {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  padding: 0 16px;
+  gap: 8px;
+  flex: none;
+}
+
+.tab-btn {
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.viewport {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  position: relative;
+}
+
+#art-stage {
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.7);
+  display: inline-block;
+  flex: none;
+  position: relative;
+}
+
+.html-view {
+  flex: 1;
+  padding: 16px;
+  overflow: auto;
+  display: none;
+}
+
+.html-view.active {
+  display: block;
+}
+
+.html-view textarea {
+  width: 100%;
+  height: 100%;
+  background: #111;
+  color: #a5d6ff;
+  border: 1px solid var(--border-color);
+  font-family: "Iosevka Fixed", monospace;
+  font-size: 12px;
+  padding: 16px;
+  border-radius: 6px;
+}
+
+footer.statusbar {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: none;
+}
+
+.status-info {
+  display: flex;
+  gap: 16px;
+}
+
+.status-item {
+  display: flex;
+  gap: 4px;
+}
+
+.status-item span {
+  color: var(--text-primary);
+  font-weight: 500;
+}

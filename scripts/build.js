@@ -9,9 +9,13 @@ const rootDir = path.resolve(__dirname, "..");
 const srcDir = path.resolve(rootDir, "src");
 const distDir = path.resolve(rootDir, "dist");
 const demoDir = path.resolve(rootDir, "demo");
+const docsDir = path.resolve(rootDir, "docs");
 
 if (!fs.existsSync(distDir)) {
   fs.mkdirSync(distDir, { recursive: true });
+}
+if (!fs.existsSync(docsDir)) {
+  fs.mkdirSync(docsDir, { recursive: true });
 }
 
 console.log("Building irc2html with esbuild...");
@@ -28,7 +32,7 @@ fs.copyFileSync(
   path.join(distDir, "index.d.ts")
 );
 
-// 3. Bundle ESM (dist/index.js & demo/irc2html.js)
+// 3. Bundle ESM (dist/index.js, demo/irc2html.js, docs/irc2html.js)
 await esbuild.build({
   entryPoints: [path.join(srcDir, "index.js")],
   outfile: path.join(distDir, "index.js"),
@@ -41,6 +45,13 @@ fs.copyFileSync(
   path.join(distDir, "index.js"),
   path.join(demoDir, "irc2html.js")
 );
+
+if (fs.existsSync(docsDir)) {
+  fs.copyFileSync(
+    path.join(distDir, "index.js"),
+    path.join(docsDir, "irc2html.js")
+  );
+}
 
 // 4. Bundle CJS (dist/index.cjs)
 await esbuild.build({

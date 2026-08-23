@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>irc2html - Native & Bitmap IRC / ANSI Web Renderer</title>
+  <link rel="stylesheet" href="./demo.css">
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <span>🎨 irc2html</span>
+      <span class="badge">v1.0.0</span>
+    </div>
+    <div class="header-links">
+      <button id="copy-html-btn" class="btn">Copy HTML</button>
+      <button id="copy-text-btn" class="btn">Copy Text</button>
+      <button id="download-html-btn" class="btn btn-primary">Download HTML</button>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3>Render Mode</h3>
+        <div class="control-group">
+          <label for="preview-mode-select">Preview Mode</label>
+          <select id="preview-mode-select">
+            <option value="text" selected>Native Text (DOM)</option>
+            <option value="bitmap">Bitmap (Canvas)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Art Source</h3>
+        <div class="control-group">
+          <label for="sample-select">Preset</label>
+          <select id="sample-select">
+            <option value="pinkpanther" selected>Pink Panther (IRC)</option>
+            <option value="komodo">Komodo (ANSI Truecolor)</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="format-select">Format</label>
+          <select id="format-select">
+            <option value="auto">Auto-Detect</option>
+            <option value="irc">IRC / mIRC</option>
+            <option value="ansi">ANSI / VT100</option>
+            <option value="plain">Plain Text</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="file-input">Load File (.irc, .ans, .txt)</label>
+          <input type="file" id="file-input" accept=".txt,.irc,.ans,.ansi">
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Typography & Sizing</h3>
+        <div class="control-group">
+          <label for="font-size">Font Size <span id="font-size-val" class="val-indicator">16px</span></label>
+          <input type="range" id="font-size" min="8" max="36" value="16" step="1">
+        </div>
+        <div class="control-group">
+          <label for="font-family">Font Family</label>
+          <select id="font-family">
+            <option value="Iosevka Fixed" selected>Iosevka Fixed (Default)</option>
+            <option value="Cascadia Code">Cascadia Code</option>
+            <option value="Courier New">Courier New</option>
+            <option value="monospace">Default Monospace</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="line-height">Line Height <span id="line-height-val" class="val-indicator">1.0x</span></label>
+          <input type="range" id="line-height" min="0.7" max="1.6" value="1.0" step="0.05">
+        </div>
+        <div class="control-group">
+          <label for="aspect-ratio">Cell Aspect Ratio <span id="aspect-ratio-val" class="val-indicator">0.50</span></label>
+          <input type="range" id="aspect-ratio" min="0.4" max="0.8" value="0.50" step="0.01">
+        </div>
+      </div>
+
+      <div class="sidebar-section" style="flex: 1; display: flex; flex-direction: column;">
+        <h3>Raw Input (Paste Art)</h3>
+        <textarea id="raw-text-input" placeholder="Paste raw IRC or ANSI art here..."></textarea>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="tab-bar">
+        <button id="tab-dom-btn" class="tab-btn active">Render View</button>
+        <button id="tab-html-btn" class="tab-btn">Generated HTML</button>
+      </div>
+
+      <div id="dom-viewport" class="viewport">
+        <div id="art-stage"></div>
+      </div>
+
+      <div id="html-viewport" class="html-view">
+        <textarea id="html-code-area" readonly></textarea>
+      </div>
+
+      <footer class="statusbar">
+        <div class="status-info">
+          <div class="status-item">Render: <span id="status-time">-</span></div>
+        </div>
+        <div class="status-item">
+          <span id="status-hover">-</span>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script type="module" src="./demo.js"></script>
+</body>
+</html>
