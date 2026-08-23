@@ -73,17 +73,19 @@ export function parseIrc(text, options = {}) {
   while (i < len) {
     const ch = chars[i];
 
-    // Newline handling
+    // Newline handling: IRC resets style/color state on newlines
     if (ch === "\r") {
       if (i + 1 < len && chars[i + 1] === "\n") {
         i++;
       }
       finishRow();
+      resetStyles();
       i++;
       continue;
     }
     if (ch === "\n") {
       finishRow();
+      resetStyles();
       i++;
       continue;
     }

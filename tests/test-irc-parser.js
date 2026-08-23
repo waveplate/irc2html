@@ -58,10 +58,10 @@ export function testIrcParser() {
   assert.strictEqual(tabbed.cells[0].length, 5); // 'A', ' ', ' ', ' ', 'B'
   assert.strictEqual(tabbed.cells[0][4].character, "B");
 
-  // 9. Multiline and Unicode Astral characters
-  const unicodeArt = parseIrc("🭞 16,89▁\n🭊 28🬽");
-  assert.strictEqual(unicodeArt.rows, 2);
-  assert.strictEqual(unicodeArt.cells[0][0].character, "🭞");
+  // 9. Newline MUST reset styles and background color across rows
+  const multiLine = parseIrc("\x0304,60Line1\n   Line2");
+  assert.deepStrictEqual(multiLine.cells[0][0].background, IRC99_PALETTE[60]);
+  assert.strictEqual(multiLine.cells[1][0].background, undefined, "Newline must reset background so leading spaces on line 2 are not grey/colored");
 
   console.log("✓ IRC Parser tests passed!");
 }

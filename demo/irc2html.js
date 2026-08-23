@@ -473,11 +473,13 @@ function parseIrc(text, options = {}) {
         i++;
       }
       finishRow();
+      resetStyles();
       i++;
       continue;
     }
     if (ch === "\n") {
       finishRow();
+      resetStyles();
       i++;
       continue;
     }
