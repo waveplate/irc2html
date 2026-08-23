@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>irc2html - Basic Usage Example</title>
-  <!-- 1. Include the CSS (or let injectDefaultStyles handle it automatically) -->
   <link rel="stylesheet" href="../dist/styles.css">
   <style>
     body {
@@ -13,7 +12,8 @@
       padding: 30px;
     }
     .art-container {
-      margin-top: 15px;
+      margin-top: 10px;
+      margin-bottom: 20px;
       padding: 10px;
       background: #000;
       display: inline-block;
@@ -22,43 +22,38 @@
   </style>
 </head>
 <body>
-  <h1>irc2html: Raw Art Rendering Example</h1>
-  <p>Renders raw IRC or ANSI art into a target DOM element as native text.</p>
+  <h1>irc2html Usage Example</h1>
 
-  <h2>1. mIRC 99-Color Art</h2>
-  <div id="irc-target" class="art-container"></div>
+  <h2>1. Native DOM Text Mode (mIRC Color)</h2>
+  <div id="irc-text-target" class="art-container"></div>
 
-  <h2>2. ANSI 256-Color Art</h2>
-  <div id="ansi-target" class="art-container"></div>
+  <h2>2. Bitmap Canvas Mode (ANSI 256 / Truecolor)</h2>
+  <div id="ansi-bitmap-target" class="art-container"></div>
 
-  <!-- 2. Import irc2html and render raw art into the target elements -->
   <script type="module">
     import { render, OutputPreview } from "../dist/index.js";
 
-    // Raw IRC art string with mIRC color codes (\x03fg,bg)
     const rawIrcArt = 
       "\x0304,01 ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄ \x03\n" +
       "\x0308,01 █  \x02\x0304mIRC\x0F\x0308,01 Color & Style Art   █ \x03\n" +
       "\x0309,01 █  \x1D\x0311Italic\x0F \x1F\x0312Underline\x0F \x16\x0313Invert\x0F\x0309,01 █ \x03\n" +
       "\x0304,01 ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀ \x03";
 
-    // Raw ANSI art string with 256-color & truecolor escape codes (\x1b[...)
     const rawAnsiArt = 
       "\x1b[1;38;5;214m✦ ANSI 256 / Truecolor Terminal Art ✦\x1b[0m\n" +
       "\x1b[38;2;255;50;50m██████\x1b[38;2;255;180;50m██████\x1b[38;2;50;220;50m██████\x1b[38;2;50;150;255m██████\x1b[38;2;200;50;255m██████\x1b[0m\n" +
       "\x1b[48;2;255;50;50m      \x1b[48;2;255;180;50m      \x1b[48;2;50;220;50m      \x1b[48;2;50;150;255m      \x1b[48;2;200;50;255m      \x1b[0m";
 
-    // Example 1: One-liner render into any DOM element
-    // Defaults to: font-family: "Iosevka Fixed", monospace; aspect-ratio: 0.5; line-height: 1.0x
-    render(rawIrcArt, document.getElementById("irc-target"), {
+    // 1. Render in Native DOM Text Mode (default)
+    render(rawIrcArt, document.getElementById("irc-text-target"), {
       fontSize: 18,
     });
 
-    // Example 2: Using OutputPreview class instance
-    const ansiPreview = new OutputPreview(document.getElementById("ansi-target"), {
+    // 2. Render in Bitmap Canvas Mode
+    render(rawAnsiArt, document.getElementById("ansi-bitmap-target"), {
+      mode: "bitmap",
       fontSize: 18,
     });
-    ansiPreview.draw(rawAnsiArt);
   </script>
 </body>
 </html>
