@@ -1,6 +1,7 @@
 import { OutputPreview, render, toHtml, toHtmlDocument } from "./irc2html.js";
 import { SAMPLES } from "./samples.js";
 
+const previewModeSelect = document.getElementById("preview-mode-select");
 const sampleSelect = document.getElementById("sample-select");
 const formatSelect = document.getElementById("format-select");
 const fontSizeInput = document.getElementById("font-size");
@@ -14,8 +15,6 @@ const rawTextInput = document.getElementById("raw-text-input");
 const fileInput = document.getElementById("file-input");
 
 const stageEl = document.getElementById("art-stage");
-const statusDim = document.getElementById("status-dim");
-const statusCells = document.getElementById("status-cells");
 const statusTime = document.getElementById("status-time");
 const statusHover = document.getElementById("status-hover");
 
@@ -49,11 +48,13 @@ function renderArt(text) {
     lineHeight: parseFloat(fontSizeInput.value) * parseFloat(lineHeightInput.value),
     aspectRatio: parseFloat(aspectRatioInput.value),
     format: formatSelect.value,
+    mode: previewModeSelect.value,
   };
 
   if (!preview) {
     preview = new OutputPreview(stageEl, options);
   }
+  preview.setMode(options.mode);
   preview.setOutputFontSize(options.fontSize);
   preview.setFontFamily(options.fontFamily);
   preview.draw(text, options);
@@ -66,6 +67,12 @@ function renderArt(text) {
     htmlCodeArea.value = toHtml(text, options);
   }
 }
+
+previewModeSelect.addEventListener("change", () => {
+  if (preview) {
+    preview.setMode(previewModeSelect.value);
+  }
+});
 
 sampleSelect.addEventListener("change", () => {
   loadSample(sampleSelect.value);
@@ -174,5 +181,5 @@ downloadHtmlBtn.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
-// Initial sample load (purely in-memory, no path-dependent fetch)
-loadSample("biglisa");
+// Load pinkpanther sample
+loadSample("pinkpanther");

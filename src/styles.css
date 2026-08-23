@@ -1,6 +1,18 @@
 /**
- * irc2html - Native DOM text rendering styles directly from img2irc
+ * irc2html - Native DOM & Canvas Bitmap styles directly from img2irc
  */
+
+.output-canvas {
+  background: #000;
+  display: block;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.output-canvas[hidden],
+.output-text[hidden] {
+  display: none !important;
+}
 
 .output-text {
   background: #000;

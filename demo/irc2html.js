@@ -916,6 +916,18 @@ function parse(input, options = {}) {
 
 // src/styles.js
 var DEFAULT_CSS = `
+.output-canvas {
+  background: #000;
+  display: block;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.output-canvas[hidden],
+.output-text[hidden] {
+  display: none !important;
+}
+
 .output-text {
   background: #000;
   color: #fff;
@@ -971,24 +983,27 @@ function injectDefaultStyles(doc = typeof document !== "undefined" ? document : 
 var DEFAULT_DISPLAY_FONT_SIZE = 16;
 var DEFAULT_FONT_FAMILY = "Iosevka Fixed, monospace";
 var DEFAULT_ASPECT_RATIO = 0.5;
-var _stage, _text, _placeholder, _displayFontSize, _fontFamily, _textMetrics, _hasText, _measurementContext, _OutputPreview_instances, drawText_fn, applyTextDisplayMetrics_fn, setStageSize_fn, updateVisibility_fn;
+var _stage, _canvas, _text, _placeholder, _mode, _displayFontSize, _fontFamily, _bitmapMetrics, _textMetrics, _hasText, _measurementContext, _OutputPreview_instances, drawBitmap_fn, applyBitmapDisplaySize_fn, drawText_fn, applyTextDisplayMetrics_fn, setStageSize_fn, updateVisibility_fn;
 var OutputPreview = class {
   /**
    * Accepts either:
    *  - new OutputPreview(targetElement, options)
-   *  - new OutputPreview(stageElement, textElement, placeholderElement)
+   *  - new OutputPreview(stageElement, canvasElement, textElement, placeholderElement)
    */
-  constructor(targetOrStage, textOrOptions, placeholder) {
+  constructor(stageOrTarget, canvasOrOptions, text, placeholder) {
     __privateAdd(this, _OutputPreview_instances);
     __privateAdd(this, _stage);
+    __privateAdd(this, _canvas);
     __privateAdd(this, _text);
     __privateAdd(this, _placeholder);
+    __privateAdd(this, _mode, "text");
     __privateAdd(this, _displayFontSize, DEFAULT_DISPLAY_FONT_SIZE);
     __privateAdd(this, _fontFamily, DEFAULT_FONT_FAMILY);
+    __privateAdd(this, _bitmapMetrics);
     __privateAdd(this, _textMetrics);
     __privateAdd(this, _hasText, false);
     __privateAdd(this, _measurementContext, null);
-    if (!targetOrStage) {
+    if (!stageOrTarget) {
       throw new Error("OutputPreview requires a target DOM element.");
     }
     if (typeof document !== "undefined") {
@@ -999,18 +1014,26 @@ var OutputPreview = class {
       }
       injectDefaultStyles();
     }
-    if (textOrOptions instanceof HTMLElement) {
-      __privateSet(this, _stage, targetOrStage);
-      __privateSet(this, _text, textOrOptions);
+    if (canvasOrOptions instanceof HTMLElement && text instanceof HTMLElement) {
+      __privateSet(this, _stage, stageOrTarget);
+      __privateSet(this, _canvas, canvasOrOptions);
+      __privateSet(this, _text, text);
       __privateSet(this, _placeholder, placeholder);
     } else {
-      __privateSet(this, _stage, targetOrStage);
-      const options = textOrOptions || {};
+      __privateSet(this, _stage, stageOrTarget);
+      const options = canvasOrOptions || {};
+      __privateSet(this, _mode, options.mode === "bitmap" ? "bitmap" : "text");
+      __privateSet(this, _canvas, document.createElement("canvas"));
+      __privateGet(this, _canvas).className = "output-canvas";
+      __privateGet(this, _canvas).setAttribute("role", "img");
+      __privateGet(this, _canvas).setAttribute("aria-label", "Rendered terminal art as bitmap canvas");
+      __privateGet(this, _canvas).hidden = __privateGet(this, _mode) !== "bitmap";
       __privateSet(this, _text, document.createElement("div"));
       __privateGet(this, _text).className = "output-text";
       __privateGet(this, _text).setAttribute("role", "img");
       __privateGet(this, _text).setAttribute("aria-label", "Rendered terminal art as native browser text");
-      __privateGet(this, _stage).replaceChildren(__privateGet(this, _text));
+      __privateGet(this, _text).hidden = __privateGet(this, _mode) !== "text";
+      __privateGet(this, _stage).replaceChildren(__privateGet(this, _canvas), __privateGet(this, _text));
       if (options.fontFamily) {
         this.setFontFamily(options.fontFamily);
       } else {
@@ -1021,6 +1044,13 @@ var OutputPreview = class {
       }
     }
   }
+  setMode(mode) {
+    __privateSet(this, _mode, mode === "bitmap" ? "bitmap" : "text");
+    __privateMethod(this, _OutputPreview_instances, updateVisibility_fn).call(this);
+  }
+  getMode() {
+    return __privateGet(this, _mode);
+  }
   setFontFamily(family) {
     __privateSet(this, _fontFamily, family || DEFAULT_FONT_FAMILY);
     __privateGet(this, _text).style.fontFamily = `"${__privateGet(this, _fontFamily).replaceAll('"', '\\"')}", monospace`;
@@ -1030,6 +1060,7 @@ var OutputPreview = class {
     const next = Number(value);
     if (!Number.isFinite(next) || next <= 0) return;
     __privateSet(this, _displayFontSize, next);
+    if (__privateGet(this, _bitmapMetrics)) __privateMethod(this, _OutputPreview_instances, applyBitmapDisplaySize_fn).call(this, __privateGet(this, _bitmapMetrics));
     if (__privateGet(this, _textMetrics)) __privateMethod(this, _OutputPreview_instances, applyTextDisplayMetrics_fn).call(this, __privateGet(this, _textMetrics));
   }
   /**
@@ -1062,6 +1093,7 @@ var OutputPreview = class {
     } else {
       result = resultOrArt;
     }
+    __privateMethod(this, _OutputPreview_instances, drawBitmap_fn).call(this, result);
     if (result && result.cells) {
       let naturalAdvance = __privateGet(this, _displayFontSize) * DEFAULT_ASPECT_RATIO;
       if (__privateGet(this, _measurementContext)) {
@@ -1095,8 +1127,14 @@ var OutputPreview = class {
     return __privateGet(this, _hasText);
   }
   clear(message = "Rendered output will appear here.") {
+    __privateSet(this, _bitmapMetrics, void 0);
     __privateSet(this, _textMetrics, void 0);
     __privateSet(this, _hasText, false);
+    if (__privateGet(this, _canvas)) {
+      __privateGet(this, _canvas).width = 0;
+      __privateGet(this, _canvas).height = 0;
+      __privateGet(this, _canvas).hidden = true;
+    }
     __privateGet(this, _text).replaceChildren();
     __privateGet(this, _text).hidden = true;
     __privateMethod(this, _OutputPreview_instances, setStageSize_fn).call(this, 0, 0);
@@ -1107,8 +1145,8 @@ var OutputPreview = class {
   }
   clientPointToCell(clientX, clientY, columns, rows) {
     const bounds = __privateGet(this, _stage).getBoundingClientRect();
-    const cols = columns ?? __privateGet(this, _textMetrics)?.columns ?? 0;
-    const rws = rows ?? __privateGet(this, _textMetrics)?.rows ?? 0;
+    const cols = columns ?? (__privateGet(this, _mode) === "text" ? __privateGet(this, _textMetrics)?.columns : __privateGet(this, _bitmapMetrics)?.columns) ?? 0;
+    const rws = rows ?? (__privateGet(this, _mode) === "text" ? __privateGet(this, _textMetrics)?.rows : __privateGet(this, _bitmapMetrics)?.rows) ?? 0;
     if (bounds.width <= 0 || bounds.height <= 0 || cols <= 0 || rws <= 0) return void 0;
     return {
       x: Math.max(0, Math.min(cols - 1, Math.floor((clientX - bounds.left) * cols / bounds.width))),
@@ -1117,14 +1155,116 @@ var OutputPreview = class {
   }
 };
 _stage = new WeakMap();
+_canvas = new WeakMap();
 _text = new WeakMap();
 _placeholder = new WeakMap();
+_mode = new WeakMap();
 _displayFontSize = new WeakMap();
 _fontFamily = new WeakMap();
+_bitmapMetrics = new WeakMap();
 _textMetrics = new WeakMap();
 _hasText = new WeakMap();
 _measurementContext = new WeakMap();
 _OutputPreview_instances = new WeakSet();
+drawBitmap_fn = function(result) {
+  if (!__privateGet(this, _canvas) || !result) {
+    if (__privateGet(this, _canvas)) {
+      __privateGet(this, _canvas).width = 0;
+      __privateGet(this, _canvas).height = 0;
+    }
+    __privateSet(this, _bitmapMetrics, void 0);
+    return;
+  }
+  if (result.previewRgba?.length && result.previewWidth && result.previewHeight) {
+    const expectedBytes = result.previewWidth * result.previewHeight * 4;
+    if (result.previewRgba.byteLength === expectedBytes) {
+      __privateGet(this, _canvas).width = result.previewWidth;
+      __privateGet(this, _canvas).height = result.previewHeight;
+      const context = __privateGet(this, _canvas).getContext("2d", { alpha: false });
+      context.imageSmoothingEnabled = false;
+      const pixels = new Uint8ClampedArray(
+        result.previewRgba.buffer,
+        result.previewRgba.byteOffset,
+        result.previewRgba.byteLength
+      );
+      context.putImageData(new ImageData(pixels, result.previewWidth, result.previewHeight), 0, 0);
+      __privateSet(this, _bitmapMetrics, {
+        previewWidth: result.previewWidth,
+        previewHeight: result.previewHeight,
+        columns: result.columns,
+        rows: result.rows,
+        renderFontSize: result.fontSize,
+        cellAdvance: result.cellAdvance,
+        lineHeight: result.lineHeight
+      });
+      __privateMethod(this, _OutputPreview_instances, applyBitmapDisplaySize_fn).call(this, __privateGet(this, _bitmapMetrics));
+      return;
+    }
+  }
+  if (result.cells && result.cells.length > 0) {
+    const columns = result.columns;
+    const rows = result.rows;
+    const fontSize = result.fontSize ?? __privateGet(this, _displayFontSize);
+    const cellAdvance = result.cellAdvance ?? fontSize * DEFAULT_ASPECT_RATIO;
+    const lineHeight = result.lineHeight ?? fontSize;
+    const cellWidth = Math.max(1, Math.round(cellAdvance));
+    const cellHeight = Math.max(1, Math.round(lineHeight));
+    const totalWidth = columns * cellWidth;
+    const totalHeight = rows * cellHeight;
+    if (totalWidth <= 0 || totalHeight <= 0) {
+      __privateGet(this, _canvas).width = 0;
+      __privateGet(this, _canvas).height = 0;
+      __privateSet(this, _bitmapMetrics, void 0);
+      return;
+    }
+    __privateGet(this, _canvas).width = totalWidth;
+    __privateGet(this, _canvas).height = totalHeight;
+    const ctx = __privateGet(this, _canvas).getContext("2d", { alpha: false });
+    ctx.imageSmoothingEnabled = false;
+    ctx.textBaseline = "top";
+    const defaultFg = [255, 255, 255];
+    const defaultBg = [0, 0, 0];
+    for (let r = 0; r < result.cells.length; r++) {
+      const row = result.cells[r];
+      const y = r * cellHeight;
+      for (let c = 0; c < row.length; c++) {
+        const cell = row[c];
+        const x = c * cellWidth;
+        const style = displayStyle(cell, defaultFg, defaultBg);
+        ctx.fillStyle = rgbToString(style.background, defaultBg);
+        ctx.fillRect(x, y, cellWidth, cellHeight);
+        if (cell.character && cell.character !== " ") {
+          ctx.fillStyle = rgbToString(style.foreground, defaultFg);
+          ctx.font = `${style.bold ? "700 " : "400 "}${style.italic ? "italic " : ""}${fontSize}px "${__privateGet(this, _fontFamily).replaceAll('"', '\\"')}", monospace`;
+          ctx.fillText(cell.character, x, y);
+        }
+      }
+    }
+    __privateSet(this, _bitmapMetrics, {
+      previewWidth: totalWidth,
+      previewHeight: totalHeight,
+      columns,
+      rows,
+      renderFontSize: fontSize,
+      cellAdvance,
+      lineHeight
+    });
+    __privateMethod(this, _OutputPreview_instances, applyBitmapDisplaySize_fn).call(this, __privateGet(this, _bitmapMetrics));
+    return;
+  }
+  __privateGet(this, _canvas).width = 0;
+  __privateGet(this, _canvas).height = 0;
+  __privateSet(this, _bitmapMetrics, void 0);
+};
+applyBitmapDisplaySize_fn = function(result) {
+  if (!__privateGet(this, _canvas)) return;
+  const scale = result.renderFontSize > 0 ? __privateGet(this, _displayFontSize) / result.renderFontSize : 1;
+  const width = result.columns * result.cellAdvance * scale;
+  const height = result.rows * result.lineHeight * scale;
+  __privateGet(this, _canvas).style.width = `${width}px`;
+  __privateGet(this, _canvas).style.height = `${height}px`;
+  if (__privateGet(this, _mode) === "bitmap") __privateMethod(this, _OutputPreview_instances, setStageSize_fn).call(this, width, height);
+};
 drawText_fn = function(rows) {
   const documentFragment = document.createDocumentFragment();
   for (const cells of rows) {
@@ -1167,7 +1307,9 @@ applyTextDisplayMetrics_fn = function(result) {
   __privateGet(this, _text).style.width = `${result.columns * cellAdvance}px`;
   __privateGet(this, _text).style.height = `${result.rows * lineHeight}px`;
   __privateGet(this, _text).style.setProperty("--output-line-height", `${lineHeight}px`);
-  __privateMethod(this, _OutputPreview_instances, setStageSize_fn).call(this, result.columns * cellAdvance, result.rows * lineHeight);
+  if (__privateGet(this, _mode) === "text") {
+    __privateMethod(this, _OutputPreview_instances, setStageSize_fn).call(this, result.columns * cellAdvance, result.rows * lineHeight);
+  }
 };
 setStageSize_fn = function(width, height) {
   if (__privateGet(this, _stage)) {
@@ -1176,16 +1318,20 @@ setStageSize_fn = function(width, height) {
   }
 };
 updateVisibility_fn = function() {
-  const showText = __privateGet(this, _hasText);
+  const showText = __privateGet(this, _mode) === "text" && __privateGet(this, _hasText);
+  const showBitmap = __privateGet(this, _mode) === "bitmap" && Boolean(__privateGet(this, _bitmapMetrics));
   __privateGet(this, _text).hidden = !showText;
+  if (__privateGet(this, _canvas)) __privateGet(this, _canvas).hidden = !showBitmap;
   if (showText && __privateGet(this, _textMetrics)) {
     __privateMethod(this, _OutputPreview_instances, applyTextDisplayMetrics_fn).call(this, __privateGet(this, _textMetrics));
+  } else if (showBitmap && __privateGet(this, _bitmapMetrics)) {
+    __privateMethod(this, _OutputPreview_instances, applyBitmapDisplaySize_fn).call(this, __privateGet(this, _bitmapMetrics));
   } else {
     __privateMethod(this, _OutputPreview_instances, setStageSize_fn).call(this, 0, 0);
   }
   if (__privateGet(this, _placeholder)) {
-    __privateGet(this, _placeholder).textContent = "Render once to create the native-text preview.";
-    __privateGet(this, _placeholder).hidden = showText;
+    __privateGet(this, _placeholder).textContent = __privateGet(this, _mode) === "text" ? "Render once to create the native-text preview." : "Rendered output will appear here.";
+    __privateGet(this, _placeholder).hidden = showText || showBitmap;
   }
 };
 function render(rawArtOrResult, targetElement, options = {}) {

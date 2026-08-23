@@ -14,14 +14,26 @@
   font-display: swap;
 }
 
-/* irc2html native text styles directly from img2irc */
+/* irc2html native text & canvas styles directly from img2irc */
+.output-canvas {
+  background: #000;
+  display: block;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.output-canvas[hidden],
+.output-text[hidden] {
+  display: none !important;
+}
+
 .output-text {
   background: #000;
   color: #fff;
   contain: layout paint style;
   display: inline-block;
   flex: none;
-  font-family: "Cascadia Code", "Iosevka Fixed", monospace;
+  font-family: "Iosevka Fixed", monospace;
   font-kerning: none;
   font-size: 16px;
   font-synthesis: style weight;
@@ -267,6 +279,7 @@ textarea {
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.7);
   display: inline-block;
   flex: none;
+  position: relative;
 }
 
 .html-view {
@@ -286,7 +299,7 @@ textarea {
   background: #111;
   color: #a5d6ff;
   border: 1px solid var(--border-color);
-  font-family: "Cascadia Code", "Iosevka Fixed", monospace;
+  font-family: "Iosevka Fixed", monospace;
   font-size: 12px;
   padding: 16px;
   border-radius: 6px;

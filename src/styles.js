@@ -1,4 +1,16 @@
 export const DEFAULT_CSS = `
+.output-canvas {
+  background: #000;
+  display: block;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.output-canvas[hidden],
+.output-text[hidden] {
+  display: none !important;
+}
+
 .output-text {
   background: #000;
   color: #fff;

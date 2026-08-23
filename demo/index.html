@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>irc2html - Native IRC & ANSI Web Renderer</title>
+  <title>irc2html - Native & Bitmap IRC / ANSI Web Renderer</title>
   <link rel="stylesheet" href="./demo.css">
 </head>
 <body>
@@ -22,16 +22,22 @@
   <div class="app-container">
     <aside class="sidebar">
       <div class="sidebar-section">
+        <h3>Render Mode</h3>
+        <div class="control-group">
+          <label for="preview-mode-select">Preview Mode</label>
+          <select id="preview-mode-select">
+            <option value="text" selected>Native Text (DOM)</option>
+            <option value="bitmap">Bitmap (Canvas)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
         <h3>Art Source</h3>
         <div class="control-group">
-          <label for="sample-select">Preset Samples</label>
+          <label for="sample-select">Preset</label>
           <select id="sample-select">
-            <option value="biglisa">Big Lisa (ANSI 256)</option>
-            <option value="2cool4skin">2Cool4Skin (mIRC 99)</option>
-            <option value="badge">Badge (mIRC 99)</option>
-            <option value="ansitest">Ansitest (ANSI 256)</option>
-            <option value="palette-test">Palette & Style Test (IRC)</option>
-            <option value="truecolor-rainbow">Rainbow (Truecolor ANSI)</option>
+            <option value="pinkpanther" selected>Pink Panther (IRC)</option>
           </select>
         </div>
         <div class="control-group">
@@ -82,7 +88,7 @@
 
     <main class="main-content">
       <div class="tab-bar">
-        <button id="tab-dom-btn" class="tab-btn active">Native DOM View</button>
+        <button id="tab-dom-btn" class="tab-btn active">Render View</button>
         <button id="tab-html-btn" class="tab-btn">Generated HTML</button>
       </div>
 
