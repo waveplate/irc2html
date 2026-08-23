@@ -922,7 +922,7 @@ var DEFAULT_CSS = `
   contain: layout paint style;
   display: inline-block;
   flex: none;
-  font-family: monospace;
+  font-family: "Iosevka Fixed", monospace;
   font-kerning: none;
   font-size: 16px;
   font-synthesis: style weight;
@@ -969,6 +969,8 @@ function injectDefaultStyles(doc = typeof document !== "undefined" ? document : 
 
 // src/output-preview.js
 var DEFAULT_DISPLAY_FONT_SIZE = 16;
+var DEFAULT_FONT_FAMILY = "Iosevka Fixed, monospace";
+var DEFAULT_ASPECT_RATIO = 0.5;
 var _stage, _text, _placeholder, _displayFontSize, _fontFamily, _textMetrics, _hasText, _measurementContext, _OutputPreview_instances, drawText_fn, applyTextDisplayMetrics_fn, setStageSize_fn, updateVisibility_fn;
 var OutputPreview = class {
   /**
@@ -982,7 +984,7 @@ var OutputPreview = class {
     __privateAdd(this, _text);
     __privateAdd(this, _placeholder);
     __privateAdd(this, _displayFontSize, DEFAULT_DISPLAY_FONT_SIZE);
-    __privateAdd(this, _fontFamily, "Cascadia Code, monospace");
+    __privateAdd(this, _fontFamily, DEFAULT_FONT_FAMILY);
     __privateAdd(this, _textMetrics);
     __privateAdd(this, _hasText, false);
     __privateAdd(this, _measurementContext, null);
@@ -1020,7 +1022,7 @@ var OutputPreview = class {
     }
   }
   setFontFamily(family) {
-    __privateSet(this, _fontFamily, family || "Cascadia Code, monospace");
+    __privateSet(this, _fontFamily, family || DEFAULT_FONT_FAMILY);
     __privateGet(this, _text).style.fontFamily = `"${__privateGet(this, _fontFamily).replaceAll('"', '\\"')}", monospace`;
     if (__privateGet(this, _textMetrics)) __privateMethod(this, _OutputPreview_instances, applyTextDisplayMetrics_fn).call(this, __privateGet(this, _textMetrics));
   }
@@ -1040,13 +1042,13 @@ var OutputPreview = class {
     if (typeof resultOrArt === "string") {
       const parsed = parse(resultOrArt, options);
       const fontSize = options.fontSize ?? __privateGet(this, _displayFontSize);
-      let naturalAdvance = fontSize * 0.6;
+      let naturalAdvance = fontSize * (options.aspectRatio ?? DEFAULT_ASPECT_RATIO);
       if (__privateGet(this, _measurementContext)) {
         __privateGet(this, _measurementContext).font = `400 ${__privateGet(this, _displayFontSize)}px "${__privateGet(this, _fontFamily).replaceAll('"', '\\"')}", monospace`;
         const measured = __privateGet(this, _measurementContext).measureText("M").width;
         if (measured > 0) naturalAdvance = measured;
       }
-      const cellAdvance = options.cellAdvance ?? naturalAdvance;
+      const cellAdvance = options.cellAdvance ?? (options.aspectRatio !== void 0 ? fontSize * options.aspectRatio : naturalAdvance);
       const lineHeight = options.lineHeight ?? fontSize;
       result = {
         columns: parsed.columns,
@@ -1061,7 +1063,7 @@ var OutputPreview = class {
       result = resultOrArt;
     }
     if (result && result.cells) {
-      let naturalAdvance = __privateGet(this, _displayFontSize) * 0.6;
+      let naturalAdvance = __privateGet(this, _displayFontSize) * DEFAULT_ASPECT_RATIO;
       if (__privateGet(this, _measurementContext)) {
         __privateGet(this, _measurementContext).font = `400 ${__privateGet(this, _displayFontSize)}px "${__privateGet(this, _fontFamily).replaceAll('"', '\\"')}", monospace`;
         const measured = __privateGet(this, _measurementContext).measureText("M").width;
@@ -1156,7 +1158,7 @@ applyTextDisplayMetrics_fn = function(result) {
   const lineHeight = result.lineHeight * scale;
   let naturalAdvance = cellAdvance;
   if (__privateGet(this, _measurementContext)) {
-    __privateGet(this, _measurementContext).font = `400 ${__privateGet(this, _displayFontSize)}px "${__privateGet(this, _fontFamily).replaceAll('"', '\\"')}", monospace`;
+    __privateGet(this, _measurementContext).font = `400 ${__privateGet(this, _displayFontSize)}px "${__privateGet(this, _fontFamily).replaceAll('"', '\\"')}"`;
     naturalAdvance = __privateGet(this, _measurementContext).measureText("M").width;
   }
   __privateGet(this, _text).style.fontSize = `${__privateGet(this, _displayFontSize)}px`;
@@ -1201,8 +1203,8 @@ function toHtml(input, options = {}) {
   const rowClassName = options.rowClassName ?? "output-text-row";
   const runClassName = options.runClassName ?? "output-text-run";
   const fontSize = typeof options.fontSize === "number" ? options.fontSize : 16;
-  const fontFamily = options.fontFamily || "monospace";
-  const cellAdvance = options.cellAdvance ?? fontSize * (options.aspectRatio ?? 0.55);
+  const fontFamily = options.fontFamily || "Iosevka Fixed, monospace";
+  const cellAdvance = options.cellAdvance ?? fontSize * (options.aspectRatio ?? 0.5);
   const lineHeight = options.lineHeight ?? fontSize;
   const containerStyles = [
     `font-size: ${fontSize}px;`,

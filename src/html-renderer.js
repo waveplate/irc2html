@@ -25,8 +25,8 @@ export function toHtml(input, options = {}) {
   const runClassName = options.runClassName ?? "output-text-run";
 
   const fontSize = typeof options.fontSize === "number" ? options.fontSize : 16;
-  const fontFamily = options.fontFamily || "monospace";
-  const cellAdvance = options.cellAdvance ?? (fontSize * (options.aspectRatio ?? 0.55));
+  const fontFamily = options.fontFamily || "Iosevka Fixed, monospace";
+  const cellAdvance = options.cellAdvance ?? (fontSize * (options.aspectRatio ?? 0.5));
   const lineHeight = options.lineHeight ?? fontSize;
 
   const containerStyles = [

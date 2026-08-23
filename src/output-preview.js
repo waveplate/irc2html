@@ -6,13 +6,15 @@ import { rgbToString } from "./palettes.js";
 // Terminal glyph size is a display property, independent of the raster size
 // used while matching glyphs in WASM.
 const DEFAULT_DISPLAY_FONT_SIZE = 16;
+const DEFAULT_FONT_FAMILY = "Iosevka Fixed, monospace";
+const DEFAULT_ASPECT_RATIO = 0.5;
 
 export class OutputPreview {
   #stage;
   #text;
   #placeholder;
   #displayFontSize = DEFAULT_DISPLAY_FONT_SIZE;
-  #fontFamily = "Cascadia Code, monospace";
+  #fontFamily = DEFAULT_FONT_FAMILY;
   #textMetrics;
   #hasText = false;
   #measurementContext = null;
@@ -65,7 +67,7 @@ export class OutputPreview {
   }
 
   setFontFamily(family) {
-    this.#fontFamily = family || "Cascadia Code, monospace";
+    this.#fontFamily = family || DEFAULT_FONT_FAMILY;
     this.#text.style.fontFamily = `"${this.#fontFamily.replaceAll('"', '\\"')}", monospace`;
     if (this.#textMetrics) this.#applyTextDisplayMetrics(this.#textMetrics);
   }
@@ -89,14 +91,14 @@ export class OutputPreview {
       const parsed = parse(resultOrArt, options);
       const fontSize = options.fontSize ?? this.#displayFontSize;
       
-      let naturalAdvance = fontSize * 0.6;
+      let naturalAdvance = fontSize * (options.aspectRatio ?? DEFAULT_ASPECT_RATIO);
       if (this.#measurementContext) {
         this.#measurementContext.font = `400 ${this.#displayFontSize}px "${this.#fontFamily.replaceAll('"', '\\"')}", monospace`;
         const measured = this.#measurementContext.measureText("M").width;
         if (measured > 0) naturalAdvance = measured;
       }
 
-      const cellAdvance = options.cellAdvance ?? naturalAdvance;
+      const cellAdvance = options.cellAdvance ?? (options.aspectRatio !== undefined ? fontSize * options.aspectRatio : naturalAdvance);
       const lineHeight = options.lineHeight ?? fontSize;
 
       result = {
@@ -113,7 +115,7 @@ export class OutputPreview {
     }
 
     if (result && result.cells) {
-      let naturalAdvance = this.#displayFontSize * 0.6;
+      let naturalAdvance = this.#displayFontSize * DEFAULT_ASPECT_RATIO;
       if (this.#measurementContext) {
         this.#measurementContext.font = `400 ${this.#displayFontSize}px "${this.#fontFamily.replaceAll('"', '\\"')}", monospace`;
         const measured = this.#measurementContext.measureText("M").width;
@@ -182,7 +184,7 @@ export class OutputPreview {
     const lineHeight = result.lineHeight * scale;
     let naturalAdvance = cellAdvance;
     if (this.#measurementContext) {
-      this.#measurementContext.font = `400 ${this.#displayFontSize}px "${this.#fontFamily.replaceAll('"', '\\"')}", monospace`;
+      this.#measurementContext.font = `400 ${this.#displayFontSize}px "${this.#fontFamily.replaceAll('"', '\\"')}"`;
       naturalAdvance = this.#measurementContext.measureText("M").width;
     }
     this.#text.style.fontSize = `${this.#displayFontSize}px`;

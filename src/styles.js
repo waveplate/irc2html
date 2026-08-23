@@ -5,7 +5,7 @@ export const DEFAULT_CSS = `
   contain: layout paint style;
   display: inline-block;
   flex: none;
-  font-family: monospace;
+  font-family: "Iosevka Fixed", monospace;
   font-kerning: none;
   font-size: 16px;
   font-synthesis: style weight;
