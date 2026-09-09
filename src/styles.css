@@ -14,7 +14,8 @@
   display: none !important;
 }
 
-.output-text {
+.output-text,
+.irc2html-output {
   background: #000;
   color: #fff;
   contain: layout paint style;
@@ -31,19 +32,21 @@
   box-sizing: border-box;
 }
 
-.output-text-row {
+.output-text-row,
+.irc2html-row {
   display: flex;
-  height: var(--output-line-height);
-  line-height: var(--output-line-height);
+  height: var(--output-line-height, var(--irc2html-line-height));
+  line-height: var(--output-line-height, var(--irc2html-line-height));
   overflow: hidden;
   white-space: pre;
 }
 
-.output-text-run {
-  display: block;
+.output-text-run,
+.irc2html-run {
+  display: flex;
   flex: none;
-  height: var(--output-line-height);
-  line-height: var(--output-line-height);
+  height: var(--output-line-height, var(--irc2html-line-height));
+  line-height: var(--output-line-height, var(--irc2html-line-height));
   /* Close subpixel seams inside adjoining block-element glyphs. */
   text-shadow:
     -.1px 0 currentColor,
@@ -51,4 +54,18 @@
     0 -.1px currentColor,
     0 .1px currentColor;
   white-space: pre;
+}
+
+.output-text-cell,
+.irc2html-cell {
+  box-sizing: border-box;
+  display: block;
+  flex: 0 0 var(--output-cell-advance, var(--irc2html-cell-advance));
+  height: var(--output-line-height, var(--irc2html-line-height));
+  line-height: var(--output-line-height, var(--irc2html-line-height));
+  max-width: var(--output-cell-advance, var(--irc2html-cell-advance));
+  min-width: 0;
+  overflow: hidden;
+  white-space: pre;
+  width: var(--output-cell-advance, var(--irc2html-cell-advance));
 }

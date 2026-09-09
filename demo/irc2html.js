@@ -930,7 +930,8 @@ var DEFAULT_CSS = `
   display: none !important;
 }
 
-.output-text {
+.output-text,
+.irc2html-output {
   background: #000;
   color: #fff;
   contain: layout paint style;
@@ -947,19 +948,21 @@ var DEFAULT_CSS = `
   box-sizing: border-box;
 }
 
-.output-text-row {
+.output-text-row,
+.irc2html-row {
   display: flex;
-  height: var(--output-line-height);
-  line-height: var(--output-line-height);
+  height: var(--output-line-height, var(--irc2html-line-height));
+  line-height: var(--output-line-height, var(--irc2html-line-height));
   overflow: hidden;
   white-space: pre;
 }
 
-.output-text-run {
-  display: block;
+.output-text-run,
+.irc2html-run {
+  display: flex;
   flex: none;
-  height: var(--output-line-height);
-  line-height: var(--output-line-height);
+  height: var(--output-line-height, var(--irc2html-line-height));
+  line-height: var(--output-line-height, var(--irc2html-line-height));
   /* Close subpixel seams inside adjoining block-element glyphs. */
   text-shadow:
     -.1px 0 currentColor,
@@ -967,6 +970,20 @@ var DEFAULT_CSS = `
     0 -.1px currentColor,
     0 .1px currentColor;
   white-space: pre;
+}
+
+.output-text-cell,
+.irc2html-cell {
+  box-sizing: border-box;
+  display: block;
+  flex: 0 0 var(--output-cell-advance, var(--irc2html-cell-advance));
+  height: var(--output-line-height, var(--irc2html-line-height));
+  line-height: var(--output-line-height, var(--irc2html-line-height));
+  max-width: var(--output-cell-advance, var(--irc2html-cell-advance));
+  min-width: 0;
+  overflow: hidden;
+  white-space: pre;
+  width: var(--output-cell-advance, var(--irc2html-cell-advance));
 }
 `.trim();
 function injectDefaultStyles(doc = typeof document !== "undefined" ? document : void 0) {
@@ -1236,9 +1253,14 @@ drawBitmap_fn = function(result) {
         ctx.fillStyle = rgbToString(style.background, defaultBg);
         ctx.fillRect(x, y, cellWidth, cellHeight);
         if (cell.character && cell.character !== " ") {
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(x, y, cellWidth, cellHeight);
+          ctx.clip();
           ctx.fillStyle = rgbToString(style.foreground, defaultFg);
           ctx.font = `${style.bold ? "700 " : "400 "}${style.italic ? "italic " : ""}${fontSize}px "${__privateGet(this, _fontFamily).replaceAll('"', '\\"')}", monospace`;
           ctx.fillText(cell.character, x, y);
+          ctx.restore();
         }
       }
     }
@@ -1287,7 +1309,10 @@ drawText_fn = function(rows) {
         row.append(run);
         runStyle = style;
       }
-      run.append(document.createTextNode(cell.character));
+      const cellElement = document.createElement("span");
+      cellElement.className = "output-text-cell";
+      cellElement.append(document.createTextNode(cell.character ?? ""));
+      run.append(cellElement);
     }
     documentFragment.append(row);
   }
@@ -1309,6 +1334,7 @@ applyTextDisplayMetrics_fn = function(result) {
   __privateGet(this, _text).style.width = `${result.columns * cellAdvance}px`;
   __privateGet(this, _text).style.height = `${result.rows * lineHeight}px`;
   __privateGet(this, _text).style.setProperty("--output-line-height", `${lineHeight}px`);
+  __privateGet(this, _text).style.setProperty("--output-cell-advance", `${cellAdvance}px`);
   if (__privateGet(this, _mode) === "text") {
     __privateMethod(this, _OutputPreview_instances, setStageSize_fn).call(this, result.columns * cellAdvance, result.rows * lineHeight);
   }
@@ -1350,6 +1376,7 @@ function toHtml(input, options = {}) {
   const className = options.className ?? "output-text";
   const rowClassName = options.rowClassName ?? "output-text-row";
   const runClassName = options.runClassName ?? "output-text-run";
+  const cellClassName = options.cellClassName ?? "output-text-cell";
   const fontSize = typeof options.fontSize === "number" ? options.fontSize : 16;
   const fontFamily = options.fontFamily || "Iosevka Fixed, monospace";
   const cellAdvance = options.cellAdvance ?? fontSize * (options.aspectRatio ?? 0.5);
@@ -1359,16 +1386,17 @@ function toHtml(input, options = {}) {
     `font-family: "${fontFamily.replaceAll('"', '\\"')}", monospace;`,
     `line-height: ${lineHeight}px;`,
     `--output-line-height: ${lineHeight}px;`,
+    `--output-cell-advance: ${cellAdvance}px;`,
     `width: ${parsed.columns * cellAdvance}px;`,
     `height: ${parsed.rows * lineHeight}px;`
   ];
   const rowsHtml = [];
   for (const cells of parsed.cells) {
-    let currentRunText = "";
+    let currentRunCells = [];
     let currentStyle = null;
     let runsHtml = [];
     const flushRun = () => {
-      if (currentStyle && currentRunText.length > 0) {
+      if (currentStyle && currentRunCells.length > 0) {
         const styleDeclarations = [
           `color: ${rgbToString(currentStyle.foreground, defaultForeground)};`,
           `background-color: ${rgbToString(currentStyle.background, defaultBackground)};`
@@ -1378,9 +1406,9 @@ function toHtml(input, options = {}) {
         if (currentStyle.underline) styleDeclarations.push("text-decoration: underline;");
         const styleAttr = options.inlineStyles !== false ? ` style="${styleDeclarations.join(" ")}"` : "";
         runsHtml.push(
-          `<span class="${escapeHtml(runClassName)}"${styleAttr}>${escapeHtml(currentRunText)}</span>`
+          `<span class="${escapeHtml(runClassName)}"${styleAttr}>${currentRunCells.join("")}</span>`
         );
-        currentRunText = "";
+        currentRunCells = [];
       }
     };
     for (const cell of cells) {
@@ -1389,7 +1417,9 @@ function toHtml(input, options = {}) {
         flushRun();
         currentStyle = style;
       }
-      currentRunText += cell.character;
+      currentRunCells.push(
+        `<span class="${escapeHtml(cellClassName)}">${escapeHtml(cell.character ?? "")}</span>`
+      );
     }
     flushRun();
     rowsHtml.push(

@@ -257,9 +257,14 @@ export class OutputPreview {
 
           // Draw glyph character
           if (cell.character && cell.character !== " ") {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(x, y, cellWidth, cellHeight);
+            ctx.clip();
             ctx.fillStyle = rgbToString(style.foreground, defaultFg);
             ctx.font = `${style.bold ? "700 " : "400 "}${style.italic ? "italic " : ""}${fontSize}px "${this.#fontFamily.replaceAll('"', '\\"')}", monospace`;
             ctx.fillText(cell.character, x, y);
+            ctx.restore();
           }
         }
       }
@@ -312,7 +317,10 @@ export class OutputPreview {
           row.append(run);
           runStyle = style;
         }
-        run.append(document.createTextNode(cell.character));
+        const cellElement = document.createElement("span");
+        cellElement.className = "output-text-cell";
+        cellElement.append(document.createTextNode(cell.character ?? ""));
+        run.append(cellElement);
       }
       documentFragment.append(row);
     }
@@ -335,6 +343,7 @@ export class OutputPreview {
     this.#text.style.width = `${result.columns * cellAdvance}px`;
     this.#text.style.height = `${result.rows * lineHeight}px`;
     this.#text.style.setProperty("--output-line-height", `${lineHeight}px`);
+    this.#text.style.setProperty("--output-cell-advance", `${cellAdvance}px`);
     if (this.#mode === "text") {
       this.#setStageSize(result.columns * cellAdvance, result.rows * lineHeight);
     }

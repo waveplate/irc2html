@@ -87,6 +87,8 @@ export function applyMetricsToElement(element, metrics, columns = 0, rows = 0) {
   element.style.setProperty("--irc2html-font-family", `"${metrics.fontFamily.replaceAll('"', '\\"')}", monospace`);
   element.style.setProperty("--irc2html-line-height", `${metrics.lineHeight}px`);
   element.style.setProperty("--irc2html-letter-spacing", metrics.letterSpacing);
+  element.style.setProperty("--irc2html-cell-advance", `${metrics.cellAdvance}px`);
+  element.style.setProperty("--output-cell-advance", `${metrics.cellAdvance}px`);
 
   if (columns > 0 && metrics.cellAdvance > 0) {
     element.style.width = `${columns * metrics.cellAdvance}px`;
@@ -112,7 +114,7 @@ export function buildDOMRows(cellRows, options = {}) {
   const defaultBackground = options.defaultBackground ?? [0, 0, 0];
   const rowClassName = options.rowClassName ?? "irc2html-row";
   const runClassName = options.runClassName ?? "irc2html-run";
-
+  const cellClassName = options.cellClassName ?? "irc2html-cell";
   const fragment = document.createDocumentFragment();
 
   for (const cells of cellRows) {
@@ -121,21 +123,10 @@ export function buildDOMRows(cellRows, options = {}) {
 
     let currentRun = null;
     let currentStyle = null;
-    let accumulatedText = "";
-
-    const flushRun = () => {
-      if (currentRun && accumulatedText.length > 0) {
-        currentRun.append(document.createTextNode(accumulatedText));
-        accumulatedText = "";
-      }
-    };
-
     for (const cell of cells) {
       const style = displayStyle(cell, defaultForeground, defaultBackground);
 
       if (!currentRun || !sameStyle(style, currentStyle)) {
-        flushRun();
-
         currentRun = document.createElement("span");
         currentRun.className = runClassName;
         currentRun.style.color = rgbToString(style.foreground, defaultForeground);
@@ -153,10 +144,15 @@ export function buildDOMRows(cellRows, options = {}) {
         currentStyle = style;
       }
 
-      accumulatedText += cell.character;
+      // Font fallback and Unicode width rules can give an arbitrary glyph a
+      // non-monospace advance. A fixed clipping box makes each parsed cell
+      // consume exactly one grid position regardless of what gets painted.
+      const cellEl = document.createElement("span");
+      cellEl.className = cellClassName;
+      cellEl.append(document.createTextNode(cell.character ?? ""));
+      currentRun.append(cellEl);
     }
 
-    flushRun();
     fragment.append(rowEl);
   }
 

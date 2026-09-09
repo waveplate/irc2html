@@ -13,6 +13,7 @@ import { DEFAULT_CSS } from "./styles.js";
  * @param {string} [options.className='output-text'] - Class name for outer container.
  * @param {string} [options.rowClassName='output-text-row'] - Class name for row containers.
  * @param {string} [options.runClassName='output-text-run'] - Class name for character runs.
+ * @param {string} [options.cellClassName='output-text-cell'] - Class name for fixed-width cells.
  * @returns {string}
  */
 export function toHtml(input, options = {}) {
@@ -23,6 +24,7 @@ export function toHtml(input, options = {}) {
   const className = options.className ?? "output-text";
   const rowClassName = options.rowClassName ?? "output-text-row";
   const runClassName = options.runClassName ?? "output-text-run";
+  const cellClassName = options.cellClassName ?? "output-text-cell";
 
   const fontSize = typeof options.fontSize === "number" ? options.fontSize : 16;
   const fontFamily = options.fontFamily || "Iosevka Fixed, monospace";
@@ -34,6 +36,7 @@ export function toHtml(input, options = {}) {
     `font-family: "${fontFamily.replaceAll('"', '\\"')}", monospace;`,
     `line-height: ${lineHeight}px;`,
     `--output-line-height: ${lineHeight}px;`,
+    `--output-cell-advance: ${cellAdvance}px;`,
     `width: ${parsed.columns * cellAdvance}px;`,
     `height: ${parsed.rows * lineHeight}px;`,
   ];
@@ -41,12 +44,12 @@ export function toHtml(input, options = {}) {
   const rowsHtml = [];
 
   for (const cells of parsed.cells) {
-    let currentRunText = "";
+    let currentRunCells = [];
     let currentStyle = null;
     let runsHtml = [];
 
     const flushRun = () => {
-      if (currentStyle && currentRunText.length > 0) {
+      if (currentStyle && currentRunCells.length > 0) {
         const styleDeclarations = [
           `color: ${rgbToString(currentStyle.foreground, defaultForeground)};`,
           `background-color: ${rgbToString(currentStyle.background, defaultBackground)};`,
@@ -61,9 +64,9 @@ export function toHtml(input, options = {}) {
           : "";
 
         runsHtml.push(
-          `<span class="${escapeHtml(runClassName)}"${styleAttr}>${escapeHtml(currentRunText)}</span>`
+          `<span class="${escapeHtml(runClassName)}"${styleAttr}>${currentRunCells.join("")}</span>`
         );
-        currentRunText = "";
+        currentRunCells = [];
       }
     };
 
@@ -75,7 +78,9 @@ export function toHtml(input, options = {}) {
         currentStyle = style;
       }
 
-      currentRunText += cell.character;
+      currentRunCells.push(
+        `<span class="${escapeHtml(cellClassName)}">${escapeHtml(cell.character ?? "")}</span>`
+      );
     }
 
     flushRun();

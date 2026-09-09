@@ -43,6 +43,15 @@ export interface RenderOptions {
   trimTrailingEmptyRows?: boolean;
   inlineStyles?: boolean;
   includeCss?: boolean;
+  injectStyles?: boolean;
+  autoMeasure?: boolean;
+  letterSpacing?: number | string;
+  className?: string;
+  rowClassName?: string;
+  runClassName?: string;
+  cellClassName?: string;
+  ariaLabel?: string;
+  theme?: "dark" | "light" | "transparent";
   title?: string;
 }
 

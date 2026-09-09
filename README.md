@@ -5,7 +5,7 @@ DOM and canvas bitmap renderer for IRC (mIRC 16/99 color) and ANSI (16/256/24-bi
 **Live Demo**: [https://waveplate.github.io/irc2html/](https://waveplate.github.io/irc2html/)
 
 Extracted from the `img2irc` web UI, it provides two rendering modes:
-- **Native text DOM mode** (default): Renders art as selectable text in `<div>` rows and `<span>` text runs with advance calibration, subpixel anti-seam styling, and font sizing.
+- **Native text DOM mode** (default): Renders art as selectable text in `<div>` rows and styled runs. Every parsed character is constrained to one fixed-width, clipped cell, so unusual Unicode or fallback glyph metrics cannot distort the grid.
 - **Bitmap canvas mode**: Renders art directly into an HTML `<canvas>` element with pixelated scaling.
 
 ## Defaults
